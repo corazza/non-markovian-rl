@@ -174,4 +174,16 @@ impl mdp::MDP for GridWorld {
     fn current_state(&self) -> Self::State {
         self.current_state
     }
+
+    fn terminated(&self) -> bool {
+        self.current_state == self.definition.end_state
+    }
+
+    fn is_terminal(&self, state: Self::State) -> bool {
+        state == self.definition.end_state
+    }
+
+    fn get_terminal(&self) -> Self::State {
+        self.definition.end_state
+    }
 }
