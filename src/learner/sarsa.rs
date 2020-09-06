@@ -1,81 +1,52 @@
 use std::collections::HashMap;
 
-pub use crate::learner::TabularLearner;
+pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 use crate::mdp::{Reward, MDP};
 
 pub struct Sarsa<E: MDP> {
-    alpha: Reward, // learning rate
-    epsilon: f32,  // epsilon-greedy
-    gamma: f32,    // discount factor
-    q: HashMap<(E::State, E::Action), Reward>,
-    initial_q: Reward,
-    debug: bool,
-    terminal_state: E::State,
+    pub config: TabularLearnerConfig,
+    data: TabularLearnerData<E>,
 }
 
 impl<E: MDP> Sarsa<E> {
-    pub fn new(
-        alpha: Reward,
-        epsilon: f32,
-        gamma: f32,
-        initial_q: Reward,
-        terminal_state: E::State,
-    ) -> Sarsa<E> {
-        Sarsa {
-            alpha,
-            epsilon,
-            gamma,
-            q: HashMap::new(),
-            initial_q,
-            debug: false,
-            terminal_state,
-        }
+    pub fn new(config: TabularLearnerConfig, terminal_state: E::State) -> Sarsa<E> {
+        let data = TabularLearnerData::new(terminal_state);
+        Sarsa { config, data }
     }
 }
 
 impl<E: MDP> TabularLearner<E> for Sarsa<E> {
-    fn set_debug(&mut self, debug: bool) {
-        self.debug = debug;
-    }
-
-    fn set_epsilon(&mut self, epsilon: f32) {
-        self.epsilon = epsilon;
-    }
-
-    fn alpha(&self) -> f32 {
-        self.alpha
-    }
-
-    fn value(&self, state: E::State, action: E::Action) -> Reward {
-        if state == self.terminal_state {
-            0.
-        } else {
-            *self.q.get(&(state, action)).unwrap_or(&self.initial_q)
-        }
-    }
-
-    fn set_value(&mut self, state: E::State, action: E::Action, value: Reward) {
-        self.q.insert((state, action), value);
-    }
-
     // env is preinitialized
     fn episode(&mut self, env: &mut E) {
-        self.terminal_state = env.get_terminal();
-        let mut action = self.epsilon_greedy(self.epsilon, env.current_state(), env);
+        self.data.terminal_state = env.get_terminal();
+        let mut action = self.epsilon_greedy(self.config.epsilon, env.current_state(), env);
         let mut state = env.current_state();
 
         while let Some((next_state, reward)) = env.take_action(action) {
-            let next_action = self.epsilon_greedy(self.epsilon, next_state, env);
-            if self.debug {
+            let next_action = self.epsilon_greedy(self.config.epsilon, next_state, env);
+            if self.config.debug {
                 println!(
                     "S: {:?}, A: {:?}, R: {}, S': {:?}, A': {:?}",
                     state, action, reward, next_state, next_action
                 );
             }
-            let target = reward + self.gamma * self.value(next_state, next_action);
-            self.update(state, action, target);
+            let target =
+                reward + self.config.gamma * self.data.value(&self.config, next_state, next_action);
+            self.update(self.config.alpha, state, action, target);
             state = next_state;
             action = next_action;
         }
+    }
+
+    fn data(&self) -> &TabularLearnerData<E> {
+        &self.data
+    }
+
+    fn data_mut(&mut self) -> &mut TabularLearnerData<E> {
+        &mut self.data
+    }
+
+    fn config(&self) -> &TabularLearnerConfig {
+        &self.config
     }
 }
