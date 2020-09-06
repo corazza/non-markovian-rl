@@ -7,8 +7,8 @@ use reinforcement_learning::mdp::MDP;
 fn main() {
     let episode_num: u32 = 100000;
     let cliff = gridworld_definitions::cliff(10, 5).world();
-    let mut sarsa = Sarsa::<GridWorld>::new(0.1, 0.1, 0.3, 1., cliff.get_terminal());
-    let mut ql = QLearning::<GridWorld>::new(0.1, 0.1, 0.3, 1., cliff.get_terminal());
+    let mut sarsa = Sarsa::<GridWorld>::new(0.1, 0.1, 0.9, 1., cliff.get_terminal());
+    let mut ql = QLearning::<GridWorld>::new(0.1, 0.1, 0.9, 1., cliff.get_terminal());
 
     for i in 0..episode_num {
         if i % (episode_num / 10) == 0 {
