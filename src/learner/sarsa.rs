@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
-use crate::mdp::{Reward, MDP};
+use crate::mdp::MDP;
 
 pub struct Sarsa<E: MDP> {
     pub config: TabularLearnerConfig,
