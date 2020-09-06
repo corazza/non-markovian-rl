@@ -16,11 +16,11 @@ fn main() {
 
     let config = TabularLearnerConfig::new(0.1, 0.1, 0.99, 1.);
 
-    let cliff = gridworld_definitions::cliff(10, 5).world();
+    let cliff_terminal = gridworld_definitions::cliff(10, 5).world().get_terminal();
 
-    let mut sarsa = Sarsa::<GridWorld>::new(config.clone(), cliff.get_terminal());
-    let mut ql = QLearning::<GridWorld>::new(config.clone(), cliff.get_terminal());
-    let mut dynaq = DynaQ::<GridWorld>::new(config.clone(), 50, cliff.get_terminal());
+    let mut sarsa = Sarsa::<GridWorld>::new(config.clone(), cliff_terminal);
+    let mut ql = QLearning::<GridWorld>::new(config.clone(), cliff_terminal);
+    let mut dynaq = DynaQ::<GridWorld>::new(config.clone(), 50, cliff_terminal);
 
     for i in 0..episode_num {
         if i % (episode_num / 10) == 0 {
