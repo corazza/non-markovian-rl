@@ -1,8 +1,10 @@
 use crate::mdp::{Reward, MDP};
 use rand::Rng;
 
+pub use self::dyna_q::DynaQ;
 pub use self::q_learning::QLearning;
 pub use self::sarsa::Sarsa;
+pub mod dyna_q;
 pub mod q_learning;
 pub mod sarsa;
 
