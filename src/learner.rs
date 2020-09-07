@@ -2,12 +2,15 @@ use crate::mdp::{Reward, MDP};
 use rand::Rng;
 use std::collections::HashMap;
 
-pub use self::dyna_q::DynaQ;
-pub use self::q_learning::QLearning;
-pub use self::sarsa::Sarsa;
 pub mod dyna_q;
 pub mod q_learning;
 pub mod sarsa;
+pub mod n_step_sarsa;
+
+pub use self::dyna_q::DynaQ;
+pub use self::q_learning::QLearning;
+pub use self::sarsa::Sarsa;
+pub use self::n_step_sarsa::NStepSarsa;
 
 pub struct TabularLearnerData<E: MDP> {
     pub q: HashMap<(E::State, E::Action), Reward>,
