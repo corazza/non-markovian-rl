@@ -21,7 +21,7 @@ fn main() {
     let mut sarsa = Sarsa::<GridWorld>::new(config.clone(), cliff_terminal);
     let mut ql = QLearning::<GridWorld>::new(config.clone(), cliff_terminal);
     let mut dynaq = DynaQ::<GridWorld>::new(config.clone(), 50, cliff_terminal);
-    let mut n_sarsa = NStepSarsa::<GridWorld>::new(config.clone(), cliff_terminal);
+    let mut n_sarsa = NStepSarsa::<GridWorld>::new(5, config.clone(), cliff_terminal);
 
     for i in 0..episode_num {
         if i % (episode_num / 10) == 0 {

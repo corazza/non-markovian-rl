@@ -34,19 +34,31 @@ impl<E: MDP> TabularLearner<E> for NStepSarsa<E> {
             }
 
             if self.history.len() == self.n {
-                let mut ret = self.history[0].2;
-
-                for i in 1..self.history.len() {
-                    ret = self.config.gamma*(ret + self.history[i].2);
+                let mut target = self.history[self.n-1].2;
+                for i in (0..self.n-1).rev() {
+                    target = self.history[i].2 + self.config.gamma*target;
                 }
-
-                let target = reward + self.config.gamma * self.data.value(&self.config, next_state, next_action);
-                self.update(self.config.alpha, state, action, target);
+                target += self.config.gamma.powf(self.n as f32) * self.data.value(&self.config, next_state, next_action);
+                self.update(self.config.alpha, self.history[0].0, self.history[0].1, target);
+                self.history.pop_front();
             }
 
+            self.history.push_back((state, action, reward));
             state = next_state;
             action = next_action;
         }
+
+        for i in 0..self.n {
+            let mut target = self.history[self.n-1].2;
+
+            for j in (i..self.n-1).rev() {
+                target = self.history[j].2 + self.config.gamma*target;
+            }
+
+            self.update(self.config.alpha, self.history[i].0, self.history[i].1, target);
+        }
+
+        self.history.clear();
     }
 
     fn data(&self) -> &TabularLearnerData<E> {

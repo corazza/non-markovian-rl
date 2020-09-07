@@ -40,9 +40,9 @@ impl<E: MDP> TabularLearnerData<E> {
 
 #[derive(Clone)]
 pub struct TabularLearnerConfig {
-    alpha: f32,        // learning rate
+    pub alpha: f32,        // learning rate
     pub epsilon: f32,  // epsilon-greedy
-    gamma: f32,        // discount factor
+    pub gamma: f32,        // discount factor
     pub debug: bool,   // print episode steps
     initial_q: Reward, // default value
 }
