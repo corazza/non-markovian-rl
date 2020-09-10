@@ -1,19 +1,24 @@
 use std::collections::VecDeque;
 
+use crate::environment::{Reward, MDP};
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
-use crate::mdp::{MDP, Reward};
 
 pub struct NStepSarsa<E: MDP> {
     pub config: TabularLearnerConfig,
     data: TabularLearnerData<E>,
-    n: usize, // steps
+    n: usize,                                         // steps
     history: VecDeque<(E::State, E::Action, Reward)>, // last n triplets (S_t, A_t, R_{t+1})
 }
 
 impl<E: MDP> NStepSarsa<E> {
     pub fn new(n: usize, config: TabularLearnerConfig, terminal_state: E::State) -> NStepSarsa<E> {
         let data = TabularLearnerData::new(terminal_state);
-        NStepSarsa { config, data, n, history: VecDeque::with_capacity(n) }
+        NStepSarsa {
+            config,
+            data,
+            n,
+            history: VecDeque::with_capacity(n),
+        }
     }
 }
 
@@ -34,12 +39,18 @@ impl<E: MDP> TabularLearner<E> for NStepSarsa<E> {
             }
 
             if self.history.len() == self.n {
-                let mut target = self.history[self.n-1].2;
-                for i in (0..self.n-1).rev() {
-                    target = self.history[i].2 + self.config.gamma*target;
+                let mut target = self.history[self.n - 1].2;
+                for i in (0..self.n - 1).rev() {
+                    target = self.history[i].2 + self.config.gamma * target;
                 }
-                target += self.config.gamma.powf(self.n as f32) * self.data.value(&self.config, next_state, next_action);
-                self.update(self.config.alpha, self.history[0].0, self.history[0].1, target);
+                target += self.config.gamma.powf(self.n as f32)
+                    * self.data.value(&self.config, next_state, next_action);
+                self.update(
+                    self.config.alpha,
+                    self.history[0].0,
+                    self.history[0].1,
+                    target,
+                );
                 self.history.pop_front();
             }
 
@@ -49,13 +60,18 @@ impl<E: MDP> TabularLearner<E> for NStepSarsa<E> {
         }
 
         for i in 0..self.n {
-            let mut target = self.history[self.n-1].2;
+            let mut target = self.history[self.n - 1].2;
 
-            for j in (i..self.n-1).rev() {
-                target = self.history[j].2 + self.config.gamma*target;
+            for j in (i..self.n - 1).rev() {
+                target = self.history[j].2 + self.config.gamma * target;
             }
 
-            self.update(self.config.alpha, self.history[i].0, self.history[i].1, target);
+            self.update(
+                self.config.alpha,
+                self.history[i].0,
+                self.history[i].1,
+                target,
+            );
         }
 
         self.history.clear();

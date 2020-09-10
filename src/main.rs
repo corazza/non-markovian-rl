@@ -1,10 +1,10 @@
 use std::env;
 
+use reinforcement_learning::environment::Environment;
 use reinforcement_learning::gridworld::GridWorld;
 use reinforcement_learning::gridworld_definitions;
-use reinforcement_learning::learner::{DynaQ, QLearning, Sarsa, NStepSarsa};
+use reinforcement_learning::learner::{DynaQ, NStepSarsa, QLearning, Sarsa};
 use reinforcement_learning::learner::{TabularLearner, TabularLearnerConfig};
-use reinforcement_learning::mdp::MDP;
 
 fn main() {
     let episode_num: u32 = if let Some(arg1) = env::args().nth(1) {

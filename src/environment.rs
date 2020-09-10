@@ -3,7 +3,7 @@ use std::hash::Hash;
 pub type Reward = f32;
 
 /// Interface for a Markov decision process
-pub trait MDP {
+pub trait Environment {
     type Action: Copy + Hash + Eq + std::fmt::Debug;
     // an index
     type State: Copy + Hash + Eq + std::fmt::Debug;
@@ -24,3 +24,5 @@ pub trait MDP {
 
     fn get_terminal(&self) -> Self::State;
 }
+
+pub trait MDP: Environment {}

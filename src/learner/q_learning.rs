@@ -1,5 +1,5 @@
+use crate::environment::MDP;
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
-use crate::mdp::MDP;
 
 pub struct QLearning<E: MDP> {
     pub config: TabularLearnerConfig,

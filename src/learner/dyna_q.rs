@@ -1,8 +1,8 @@
 use rand::Rng;
 use std::collections::HashMap;
 
+use crate::environment::{Reward, MDP};
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
-use crate::mdp::{Reward, MDP};
 
 pub struct DynaQ<E: MDP> {
     pub config: TabularLearnerConfig,

@@ -1,16 +1,16 @@
-use crate::mdp::{Reward, MDP};
+use crate::environment::{Reward, MDP};
 use rand::Rng;
 use std::collections::HashMap;
 
 pub mod dyna_q;
+pub mod n_step_sarsa;
 pub mod q_learning;
 pub mod sarsa;
-pub mod n_step_sarsa;
 
 pub use self::dyna_q::DynaQ;
+pub use self::n_step_sarsa::NStepSarsa;
 pub use self::q_learning::QLearning;
 pub use self::sarsa::Sarsa;
-pub use self::n_step_sarsa::NStepSarsa;
 
 pub struct TabularLearnerData<E: MDP> {
     pub q: HashMap<(E::State, E::Action), Reward>,
@@ -40,9 +40,9 @@ impl<E: MDP> TabularLearnerData<E> {
 
 #[derive(Clone)]
 pub struct TabularLearnerConfig {
-    pub alpha: f32,        // learning rate
+    pub alpha: f32,    // learning rate
     pub epsilon: f32,  // epsilon-greedy
-    pub gamma: f32,        // discount factor
+    pub gamma: f32,    // discount factor
     pub debug: bool,   // print episode steps
     initial_q: Reward, // default value
 }

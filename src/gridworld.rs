@@ -1,7 +1,7 @@
 use std::cmp;
 use std::collections::HashMap;
 
-use crate::mdp;
+use crate::environment;
 
 pub type GridIndex = (i32, i32);
 
@@ -58,8 +58,8 @@ pub struct GridWorldDefinition {
     dimensions: GridIndex,
     start_state: GridIndex,
     end_state: GridIndex,
-    default_reward: mdp::Reward,
-    reward_mask: HashMap<GridIndex, mdp::Reward>,
+    default_reward: environment::Reward,
+    reward_mask: HashMap<GridIndex, environment::Reward>,
     effect_mask: HashMap<GridIndex, StateEffect>,
 }
 
@@ -68,7 +68,7 @@ impl GridWorldDefinition {
         dimensions: GridIndex,
         start_state: GridIndex,
         end_state: GridIndex,
-        default_reward: mdp::Reward,
+        default_reward: environment::Reward,
     ) -> GridWorldDefinition {
         GridWorldDefinition {
             dimensions,
@@ -85,7 +85,7 @@ impl GridWorldDefinition {
         &mut self,
         (x, y): GridIndex, // bottom left
         (w, h): GridIndex, // widght, height
-        reward: mdp::Reward,
+        reward: environment::Reward,
     ) {
         rect_insert((x, y), (w, h), reward, &mut self.reward_mask);
     }
@@ -119,11 +119,13 @@ impl GridWorld {
     }
 }
 
-impl mdp::MDP for GridWorld {
+impl environment::MDP for GridWorld {}
+
+impl environment::Environment for GridWorld {
     type Action = GridWorldAction;
     type State = GridIndex;
 
-    fn take_action(&mut self, action: Self::Action) -> Option<(Self::State, mdp::Reward)> {
+    fn take_action(&mut self, action: Self::Action) -> Option<(Self::State, environment::Reward)> {
         if self.current_state == self.definition.end_state {
             return None;
         }
