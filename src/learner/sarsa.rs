@@ -1,19 +1,19 @@
-use crate::environment::MDP;
+use crate::environment::Environment;
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 
-pub struct Sarsa<E: MDP> {
+pub struct Sarsa<E: Environment> {
     pub config: TabularLearnerConfig,
     data: TabularLearnerData<E>,
 }
 
-impl<E: MDP> Sarsa<E> {
+impl<E: Environment> Sarsa<E> {
     pub fn new(config: TabularLearnerConfig, terminal_state: E::State) -> Sarsa<E> {
         let data = TabularLearnerData::new(terminal_state);
         Sarsa { config, data }
     }
 }
 
-impl<E: MDP> TabularLearner<E> for Sarsa<E> {
+impl<E: Environment> TabularLearner<E> for Sarsa<E> {
     // env is preinitialized
     fn episode(&mut self, env: &mut E) {
         self.data.terminal_state = env.get_terminal();

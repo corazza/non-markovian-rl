@@ -4,6 +4,7 @@ pub type Reward = f32;
 
 pub mod gridworld;
 pub mod gridworld_definitions;
+pub mod t_corridor;
 
 // Reward process interface
 pub trait Environment {
@@ -11,7 +12,7 @@ pub trait Environment {
     // either an index or a state representation
     type State: Copy + Hash + Eq + std::fmt::Debug;
 
-    /// Returns None on terminal state (if there is one)
+    /// Returns None on all transitions from terminal state
     fn take_action(&mut self, action: Self::Action) -> Option<(Self::State, Reward)>;
 
     /// Returns all actions available at state

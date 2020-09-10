@@ -1,17 +1,17 @@
 use rand::Rng;
 use std::collections::HashMap;
 
-use crate::environment::{Reward, MDP};
+use crate::environment::{Environment, Reward};
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 
-pub struct DynaQ<E: MDP> {
+pub struct DynaQ<E: Environment> {
     pub config: TabularLearnerConfig,
     data: TabularLearnerData<E>,
     n: u32, // planning steps (when planning is used, e.g. DynaQ)
     model: HashMap<(E::State, E::Action), (E::State, Reward)>,
 }
 
-impl<E: MDP> DynaQ<E> {
+impl<E: Environment> DynaQ<E> {
     pub fn new(config: TabularLearnerConfig, n: u32, terminal_state: E::State) -> DynaQ<E> {
         let data = TabularLearnerData::new(terminal_state);
         DynaQ {
@@ -23,7 +23,7 @@ impl<E: MDP> DynaQ<E> {
     }
 }
 
-impl<E: MDP> TabularLearner<E> for DynaQ<E> {
+impl<E: Environment> TabularLearner<E> for DynaQ<E> {
     // env is preinitialized
     fn episode(&mut self, env: &mut E) {
         self.data.terminal_state = env.get_terminal();

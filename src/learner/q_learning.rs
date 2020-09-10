@@ -1,19 +1,19 @@
-use crate::environment::MDP;
+use crate::environment::Environment;
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 
-pub struct QLearning<E: MDP> {
+pub struct QLearning<E: Environment> {
     pub config: TabularLearnerConfig,
     data: TabularLearnerData<E>,
 }
 
-impl<E: MDP> QLearning<E> {
+impl<E: Environment> QLearning<E> {
     pub fn new(config: TabularLearnerConfig, terminal_state: E::State) -> QLearning<E> {
         let data = TabularLearnerData::new(terminal_state);
         QLearning { config, data }
     }
 }
 
-impl<E: MDP> TabularLearner<E> for QLearning<E> {
+impl<E: Environment> TabularLearner<E> for QLearning<E> {
     // env is preinitialized
     fn episode(&mut self, env: &mut E) {
         self.data.terminal_state = env.get_terminal();

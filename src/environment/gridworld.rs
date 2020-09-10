@@ -2,6 +2,7 @@ use std::cmp;
 use std::collections::HashMap;
 
 use crate::environment;
+use environment::Environment;
 
 pub type GridIndex = (i32, i32);
 
@@ -121,7 +122,7 @@ impl GridWorld {
 
 impl environment::MDP for GridWorld {}
 
-impl environment::Environment for GridWorld {
+impl Environment for GridWorld {
     type Action = GridWorldAction;
     type State = GridIndex;
 

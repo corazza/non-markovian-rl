@@ -1,4 +1,4 @@
-use crate::environment::{Reward, MDP};
+use crate::environment::{Environment, Reward};
 use rand::Rng;
 use std::collections::HashMap;
 
@@ -12,12 +12,12 @@ pub use self::n_step_sarsa::NStepSarsa;
 pub use self::q_learning::QLearning;
 pub use self::sarsa::Sarsa;
 
-pub struct TabularLearnerData<E: MDP> {
+pub struct TabularLearnerData<E: Environment> {
     pub q: HashMap<(E::State, E::Action), Reward>,
     pub terminal_state: E::State,
 }
 
-impl<E: MDP> TabularLearnerData<E> {
+impl<E: Environment> TabularLearnerData<E> {
     pub fn new(terminal_state: E::State) -> TabularLearnerData<E> {
         TabularLearnerData {
             q: HashMap::new(),
@@ -59,7 +59,7 @@ impl TabularLearnerConfig {
     }
 }
 
-pub trait TabularLearner<E: MDP> {
+pub trait TabularLearner<E: Environment> {
     fn episode(&mut self, env: &mut E);
     fn data(&self) -> &TabularLearnerData<E>;
     fn data_mut(&mut self) -> &mut TabularLearnerData<E>;

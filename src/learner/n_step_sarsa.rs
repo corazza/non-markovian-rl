@@ -1,16 +1,16 @@
 use std::collections::VecDeque;
 
-use crate::environment::{Reward, MDP};
+use crate::environment::{Environment, Reward};
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 
-pub struct NStepSarsa<E: MDP> {
+pub struct NStepSarsa<E: Environment> {
     pub config: TabularLearnerConfig,
     data: TabularLearnerData<E>,
     n: usize,                                         // steps
     history: VecDeque<(E::State, E::Action, Reward)>, // last n triplets (S_t, A_t, R_{t+1})
 }
 
-impl<E: MDP> NStepSarsa<E> {
+impl<E: Environment> NStepSarsa<E> {
     pub fn new(n: usize, config: TabularLearnerConfig, terminal_state: E::State) -> NStepSarsa<E> {
         let data = TabularLearnerData::new(terminal_state);
         NStepSarsa {
@@ -22,7 +22,7 @@ impl<E: MDP> NStepSarsa<E> {
     }
 }
 
-impl<E: MDP> TabularLearner<E> for NStepSarsa<E> {
+impl<E: Environment> TabularLearner<E> for NStepSarsa<E> {
     // env is preinitialized
     fn episode(&mut self, env: &mut E) {
         self.data.terminal_state = env.get_terminal();
@@ -59,10 +59,13 @@ impl<E: MDP> TabularLearner<E> for NStepSarsa<E> {
             action = next_action;
         }
 
-        for i in 0..self.n {
-            let mut target = self.history[self.n - 1].2;
+        assert!(self.history.len() <= self.n);
+        let n = self.history.len(); // to handle cases where n_states < self.n
 
-            for j in (i..self.n - 1).rev() {
+        for i in 0..n {
+            let mut target = self.history[n - 1].2;
+
+            for j in (i..n - 1).rev() {
                 target = self.history[j].2 + self.config.gamma * target;
             }
 
