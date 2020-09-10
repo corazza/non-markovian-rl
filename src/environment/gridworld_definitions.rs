@@ -1,4 +1,4 @@
-use crate::gridworld::GridWorldDefinition;
+use crate::environment::gridworld::GridWorldDefinition;
 
 /// See pg. 132 of <book>
 pub fn cliff(width: i32, height: i32) -> GridWorldDefinition {

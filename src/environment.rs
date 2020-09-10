@@ -2,10 +2,13 @@ use std::hash::Hash;
 
 pub type Reward = f32;
 
-/// Interface for a Markov decision process
+pub mod gridworld;
+pub mod gridworld_definitions;
+
+// Reward process interface
 pub trait Environment {
     type Action: Copy + Hash + Eq + std::fmt::Debug;
-    // an index
+    // either an index or a state representation
     type State: Copy + Hash + Eq + std::fmt::Debug;
 
     /// Returns None on terminal state (if there is one)
@@ -25,4 +28,7 @@ pub trait Environment {
     fn get_terminal(&self) -> Self::State;
 }
 
+/// Interface for a Markov decision process
 pub trait MDP: Environment {}
+/// Interface for a non-Markov decision process
+pub trait NMDP: Environment {}

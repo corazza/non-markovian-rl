@@ -1,8 +1,8 @@
 use std::env;
 
+use reinforcement_learning::environment::gridworld::GridWorld;
+use reinforcement_learning::environment::gridworld_definitions;
 use reinforcement_learning::environment::Environment;
-use reinforcement_learning::gridworld::GridWorld;
-use reinforcement_learning::gridworld_definitions;
 use reinforcement_learning::learner::{DynaQ, NStepSarsa, QLearning, Sarsa};
 use reinforcement_learning::learner::{TabularLearner, TabularLearnerConfig};
 
