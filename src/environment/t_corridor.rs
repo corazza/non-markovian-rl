@@ -2,7 +2,7 @@ use super::{Environment, Reward};
 use rand::Rng;
 
 // State representation exposed to the agent
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TCorridorState {
     Start,
     ObserveU, // Marks upper state as trapped
@@ -11,7 +11,7 @@ pub enum TCorridorState {
     Terminal,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum TCorridorAction {
     Forward,
     Backward,

@@ -1,93 +1,123 @@
+use std::collections::HashMap;
 use std::env;
 
-use reinforcement_learning::environment::gridworld::GridWorld;
-use reinforcement_learning::environment::gridworld_definitions;
-use reinforcement_learning::environment::t_corridor::{TCorridor, TCorridorAction, TCorridorState};
+use rayon::prelude::*;
+use reinforcement_learning::environment::t_corridor::TCorridor;
 use reinforcement_learning::environment::Environment;
+use reinforcement_learning::environment::{m_wrapper::MWrapper, Reward};
 use reinforcement_learning::learner::{DynaQ, NStepSarsa, QLearning, Sarsa};
 use reinforcement_learning::learner::{TabularLearner, TabularLearnerConfig};
 
-fn corridor() {
-    let corridor = TCorridor::new();
-    let corridor_terminal = corridor.get_terminal();
-
-    let config = TabularLearnerConfig::new(0.1, 0.1, 0.99, 1.);
-}
-
-fn train_all_on<E: Environment, F>(
-    episode_num: u32,
-    config: TabularLearnerConfig,
-    new: F,
-) -> (Sarsa<E>, QLearning<E>, DynaQ<E>, NStepSarsa<E>)
-where
-    F: Fn() -> E,
-{
-    let terminal = new().get_terminal();
-
-    let mut sarsa = Sarsa::<E>::new(config.clone(), terminal);
-    let mut ql = QLearning::<E>::new(config.clone(), terminal);
-    let mut dynaq = DynaQ::<E>::new(config.clone(), 50, terminal);
-    let mut n_sarsa = NStepSarsa::<E>::new(5, config.clone(), terminal);
-
-    for i in 0..episode_num {
-        if i % (episode_num / 10) == 0 {
-            println!("episode {}/{}", i, episode_num);
-        }
-        let mut env_sarsa = new();
-        let mut env_ql = new();
-        let mut env_dynaq = new();
-        let mut env_n_sarsa = new();
-        sarsa.episode(&mut env_sarsa);
-        ql.episode(&mut env_ql);
-        dynaq.episode(&mut env_dynaq);
-        n_sarsa.episode(&mut env_n_sarsa);
-    }
-
-    (sarsa, ql, dynaq, n_sarsa)
-}
-
 fn main() {
-    let episode_num: u32 = if let Some(arg1) = env::args().nth(1) {
+    let episode_num: usize = if let Some(arg1) = env::args().nth(1) {
         arg1.parse().unwrap()
     } else {
-        println!("Defaulting to 500 episodes each");
+        println!("Defaulting to 500 episodes");
         500
     };
 
     let config = TabularLearnerConfig::new(0.1, 0.1, 1.0, 1.);
 
-    // run_all_on(episode_num, config, || {
-    //     gridworld_definitions::cliff(10, 5).world()
-    // });
+    let terminal = TCorridor::new().get_terminal();
+    let m_terminal = wrap_t_corridor().get_terminal();
 
-    let (sarsa, ql, dynaq, n_sarsa) = train_all_on(episode_num, config, TCorridor::new);
+    let mut sarsa = Sarsa::<TCorridor>::new(config.clone(), terminal);
+    let mut m_sarsa = Sarsa::<MWrapper<TCorridor>>::new(config.clone(), m_terminal);
+    let mut ql = QLearning::<TCorridor>::new(config.clone(), terminal);
+    let mut m_ql = QLearning::<MWrapper<TCorridor>>::new(config.clone(), m_terminal);
+    let mut dynaq = DynaQ::<TCorridor>::new(config.clone(), 10, terminal);
+    let mut m_dynaq = DynaQ::<MWrapper<TCorridor>>::new(config.clone(), 10, m_terminal);
+    let mut n_sarsa = NStepSarsa::<TCorridor>::new(10, config.clone(), terminal);
+    let mut m_n_sarsa = NStepSarsa::<MWrapper<TCorridor>>::new(10, config.clone(), m_terminal);
 
-    fn report_split<L: TabularLearner<TCorridor>>(learner: &L) {
-        println!(
-            "Up: {}",
-            learner.data().q[&(TCorridorState::Split, TCorridorAction::Up)]
-        );
+    {
+        let mut tasks = vec![
+            Box::new(|| train(TCorridor::new, episode_num, &mut sarsa)) as Box<dyn FnMut() + Send>,
+            Box::new(|| train(wrap_t_corridor, episode_num, &mut m_sarsa)),
+            Box::new(|| train(TCorridor::new, episode_num, &mut ql)),
+            Box::new(|| train(wrap_t_corridor, episode_num, &mut m_ql)),
+            Box::new(|| train(TCorridor::new, episode_num, &mut dynaq)),
+            Box::new(|| train(wrap_t_corridor, episode_num, &mut m_dynaq)),
+            Box::new(|| train(TCorridor::new, episode_num, &mut n_sarsa)),
+            Box::new(|| train(wrap_t_corridor, episode_num, &mut m_n_sarsa)),
+        ];
 
-        println!(
-            "Down: {}",
-            learner.data().q[&(TCorridorState::Split, TCorridorAction::Down)]
-        );
+        tasks.par_iter_mut().for_each(|f| f());
     }
+
     println!();
 
-    println!("SARSA:");
-    report_split(&sarsa);
+    println!("Sample M-SARSA episodes: ");
+    sample_episodes(wrap_t_corridor, 10, &mut m_sarsa);
     println!();
 
-    println!("Q-Learning:");
-    report_split(&ql);
+    println!("Sample SARSA episodes: ");
+    sample_episodes(TCorridor::new, 10, &mut sarsa);
     println!();
 
-    println!("DynaQ:");
-    report_split(&dynaq);
+    println!("Sample M-Q-learning episodes: ");
+    sample_episodes(wrap_t_corridor, 10, &mut m_ql);
     println!();
 
-    println!("N-Step SARSA:");
-    report_split(&n_sarsa);
+    println!("Sample Q-learning episodes: ");
+    sample_episodes(TCorridor::new, 10, &mut ql);
     println!();
+
+    println!("Sample M-DynaQ episodes: ");
+    sample_episodes(wrap_t_corridor, 10, &mut m_dynaq);
+    println!();
+
+    println!("Sample DynaQ episodes: ");
+    sample_episodes(TCorridor::new, 10, &mut dynaq);
+    println!();
+
+    println!("Sample M-N-SARSA episodes: ");
+    sample_episodes(wrap_t_corridor, 10, &mut m_n_sarsa);
+    println!();
+
+    println!("Sample N-SARSA episodes: ");
+    sample_episodes(TCorridor::new, 10, &mut n_sarsa);
+    println!();
+}
+
+fn train<E: Environment, F, L: TabularLearner<E>>(new: F, episode_num: usize, learner: &mut L)
+where
+    F: Fn() -> E,
+{
+    for i in 0..episode_num {
+        if i % (episode_num / 10) == 0 {
+            println!("episode {}/{}", i, episode_num);
+            learner.config_mut().alpha = learner.config().alpha * 0.65;
+            learner.config_mut().epsilon = learner.config().epsilon * 0.65;
+        }
+
+        let mut env = new();
+        learner.episode(&mut env);
+    }
+}
+
+fn sample_episodes<E: Environment, F, L: TabularLearner<E>>(
+    new: F,
+    episode_num: usize,
+    learner: &mut L,
+) where
+    F: Fn() -> E,
+{
+    let mut total_gain: Reward = 0.0;
+    learner.config_mut().epsilon = 0.;
+    learner.config_mut().debug = true;
+
+    for i in 0..episode_num {
+        println!("Sample episode {}/{}", i + 1, episode_num);
+        let mut env = new();
+        let gain = learner.episode(&mut env);
+        println!("Gain: {}\n", gain);
+        total_gain += gain;
+    }
+
+    println!("Total gain: {}", total_gain);
+}
+
+fn wrap_t_corridor() -> MWrapper<TCorridor> {
+    MWrapper::new(TCorridor::new())
 }

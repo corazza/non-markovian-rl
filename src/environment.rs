@@ -4,6 +4,7 @@ pub type Reward = f32;
 
 pub mod gridworld;
 pub mod gridworld_definitions;
+pub mod m_wrapper;
 pub mod t_corridor;
 
 // Reward process interface

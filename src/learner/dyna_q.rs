@@ -25,13 +25,16 @@ impl<E: Environment> DynaQ<E> {
 
 impl<E: Environment> TabularLearner<E> for DynaQ<E> {
     // env is preinitialized
-    fn episode(&mut self, env: &mut E) {
+    fn episode(&mut self, env: &mut E) -> Reward {
         self.data.terminal_state = env.get_terminal();
+        let mut gain: Reward = 0.0;
 
         loop {
             let mut state = env.current_state();
             let action = self.epsilon_greedy(self.config.epsilon, env.current_state(), env);
             let (next_state, reward) = env.take_action(action).unwrap();
+            // episode() assumes gamma=1
+            gain += reward;
             let target = reward + self.config.gamma * self.max_action_value(next_state, &env);
             self.update(self.config.alpha, state, action, target);
             self.model.insert((state, action), (next_state, reward));
@@ -57,6 +60,8 @@ impl<E: Environment> TabularLearner<E> for DynaQ<E> {
                 break;
             }
         }
+
+        gain
     }
 
     fn data(&self) -> &TabularLearnerData<E> {
@@ -69,5 +74,9 @@ impl<E: Environment> TabularLearner<E> for DynaQ<E> {
 
     fn config(&self) -> &TabularLearnerConfig {
         &self.config
+    }
+
+    fn config_mut(&mut self) -> &mut TabularLearnerConfig {
+        &mut self.config
     }
 }

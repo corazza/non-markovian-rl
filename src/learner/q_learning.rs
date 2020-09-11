@@ -1,4 +1,4 @@
-use crate::environment::Environment;
+use crate::environment::{Environment, Reward};
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 
 pub struct QLearning<E: Environment> {
@@ -15,13 +15,16 @@ impl<E: Environment> QLearning<E> {
 
 impl<E: Environment> TabularLearner<E> for QLearning<E> {
     // env is preinitialized
-    fn episode(&mut self, env: &mut E) {
+    fn episode(&mut self, env: &mut E) -> Reward {
         self.data.terminal_state = env.get_terminal();
         let mut state = env.current_state();
+        let mut gain: Reward = 0.0;
 
         loop {
             let action = self.epsilon_greedy(self.config.epsilon, env.current_state(), env);
             let (next_state, reward) = env.take_action(action).unwrap();
+            // episode() assumes gamma=1
+            gain += reward;
             let target = reward + self.config.gamma * self.max_action_value(next_state, &env);
             self.update(self.config.alpha, state, action, target);
 
@@ -34,6 +37,8 @@ impl<E: Environment> TabularLearner<E> for QLearning<E> {
                 break;
             }
         }
+
+        gain
     }
 
     fn data(&self) -> &TabularLearnerData<E> {
@@ -46,5 +51,9 @@ impl<E: Environment> TabularLearner<E> for QLearning<E> {
 
     fn config(&self) -> &TabularLearnerConfig {
         &self.config
+    }
+
+    fn config_mut(&mut self) -> &mut TabularLearnerConfig {
+        &mut self.config
     }
 }

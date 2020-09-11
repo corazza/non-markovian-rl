@@ -60,10 +60,11 @@ impl TabularLearnerConfig {
 }
 
 pub trait TabularLearner<E: Environment> {
-    fn episode(&mut self, env: &mut E);
+    fn episode(&mut self, env: &mut E) -> Reward;
     fn data(&self) -> &TabularLearnerData<E>;
     fn data_mut(&mut self) -> &mut TabularLearnerData<E>;
     fn config(&self) -> &TabularLearnerConfig;
+    fn config_mut(&mut self) -> &mut TabularLearnerConfig;
     fn update(&mut self, alpha: f32, state: E::State, action: E::Action, target: Reward) {
         let current_value = self.data().value(self.config(), state, action);
         self.data_mut().set_value(

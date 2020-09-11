@@ -1,4 +1,4 @@
-use crate::environment::Environment;
+use crate::environment::{Environment, Reward};
 pub use crate::learner::{TabularLearner, TabularLearnerConfig, TabularLearnerData};
 
 pub struct Sarsa<E: Environment> {
@@ -15,12 +15,15 @@ impl<E: Environment> Sarsa<E> {
 
 impl<E: Environment> TabularLearner<E> for Sarsa<E> {
     // env is preinitialized
-    fn episode(&mut self, env: &mut E) {
+    fn episode(&mut self, env: &mut E) -> Reward {
         self.data.terminal_state = env.get_terminal();
         let mut action = self.epsilon_greedy(self.config.epsilon, env.current_state(), env);
         let mut state = env.current_state();
+        let mut gain: Reward = 0.0;
 
         while let Some((next_state, reward)) = env.take_action(action) {
+            // episode() assumes gamma=1
+            gain += reward;
             let next_action = self.epsilon_greedy(self.config.epsilon, next_state, env);
             if self.config.debug {
                 println!(
@@ -34,6 +37,8 @@ impl<E: Environment> TabularLearner<E> for Sarsa<E> {
             state = next_state;
             action = next_action;
         }
+
+        gain
     }
 
     fn data(&self) -> &TabularLearnerData<E> {
@@ -46,5 +51,9 @@ impl<E: Environment> TabularLearner<E> for Sarsa<E> {
 
     fn config(&self) -> &TabularLearnerConfig {
         &self.config
+    }
+
+    fn config_mut(&mut self) -> &mut TabularLearnerConfig {
+        &mut self.config
     }
 }

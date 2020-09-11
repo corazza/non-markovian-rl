@@ -24,12 +24,15 @@ impl<E: Environment> NStepSarsa<E> {
 
 impl<E: Environment> TabularLearner<E> for NStepSarsa<E> {
     // env is preinitialized
-    fn episode(&mut self, env: &mut E) {
+    fn episode(&mut self, env: &mut E) -> Reward {
         self.data.terminal_state = env.get_terminal();
         let mut action = self.epsilon_greedy(self.config.epsilon, env.current_state(), env);
         let mut state = env.current_state();
+        let mut gain: Reward = 0.0;
 
         while let Some((next_state, reward)) = env.take_action(action) {
+            // episode() assumes gamma=1
+            gain += reward;
             let next_action = self.epsilon_greedy(self.config.epsilon, next_state, env);
             if self.config.debug {
                 println!(
@@ -78,6 +81,8 @@ impl<E: Environment> TabularLearner<E> for NStepSarsa<E> {
         }
 
         self.history.clear();
+
+        gain
     }
 
     fn data(&self) -> &TabularLearnerData<E> {
@@ -90,5 +95,9 @@ impl<E: Environment> TabularLearner<E> for NStepSarsa<E> {
 
     fn config(&self) -> &TabularLearnerConfig {
         &self.config
+    }
+
+    fn config_mut(&mut self) -> &mut TabularLearnerConfig {
+        &mut self.config
     }
 }
