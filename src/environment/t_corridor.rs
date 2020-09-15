@@ -5,9 +5,10 @@ use rand::Rng;
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TCorridorState {
     Start,
-    ObserveU, // Marks upper state as trapped
-    ObserveL, // Marks lower state as trapped
-    Split,    // Trap location no longer observable
+    ObserveU,        // Marks upper state as trapped
+    ObserveL,        // Marks lower state as trapped
+    Corridor(usize), // regular part of the corridor
+    Split,           // Trap location no longer observable
     Terminal,
 }
 
@@ -22,13 +23,15 @@ pub enum TCorridorAction {
 pub struct TCorridor {
     current_state: TCorridorState,
     observed: i8, // -1 is lower, 1 is upper
+    normal_steps: usize,
 }
 
 impl TCorridor {
-    pub fn new() -> TCorridor {
+    pub fn new(normal_steps: usize) -> TCorridor {
         TCorridor {
             current_state: TCorridorState::Start,
             observed: 0,
+            normal_steps,
         }
     }
 
@@ -50,6 +53,15 @@ impl TCorridor {
             TCorridorState::ObserveL
         }
     }
+
+    fn split_or_corridor(&self) -> TCorridorState {
+        use TCorridorState::*;
+        if self.normal_steps > 0 {
+            Corridor(1)
+        } else {
+            Split
+        }
+    }
 }
 
 impl Environment for TCorridor {
@@ -57,6 +69,10 @@ impl Environment for TCorridor {
     type State = TCorridorState;
 
     fn take_action(&mut self, action: Self::Action) -> Option<(Self::State, Reward)> {
+        let default_reward: Reward = -5.0;
+        let trap_reward: Reward = -100.0;
+        let nontrap_reward: Reward = 100.0;
+
         if self.terminated() {
             return None;
         }
@@ -64,34 +80,48 @@ impl Environment for TCorridor {
         use TCorridorAction::*;
         use TCorridorState::*;
         let (next_state, reward) = match (self.current_state, action) {
-            (Start, TCorridorAction::Forward) => (self.observe(), 0.0),
-            (Start, _) => (Start, 0.0),
-            (ObserveL, Forward) => (Split, 0.0),
-            (ObserveL, Backward) => (Start, 0.0),
-            (ObserveL, _) => (ObserveL, 0.0),
-            (ObserveU, Forward) => (Split, 0.0),
-            (ObserveU, Backward) => (Start, 0.0),
-            (ObserveU, _) => (ObserveU, 0.0),
-            (Split, Up) => (Terminal, if self.observed == 1 { -1.0 } else { 0.0 }),
-            (Split, Down) => (Terminal, if self.observed == -1 { -1.0 } else { 0.0 }),
+            (Start, TCorridorAction::Forward) => (self.observe(), default_reward),
+            (Start, _) => (Start, default_reward),
+            (ObserveL, Forward) => (self.split_or_corridor(), default_reward),
+            (ObserveL, Backward) => (Start, default_reward),
+            (ObserveL, _) => (ObserveL, default_reward),
+            (ObserveU, Forward) => (self.split_or_corridor(), default_reward),
+            (ObserveU, Backward) => (Start, default_reward),
+            (ObserveU, _) => (ObserveU, default_reward),
+            (Corridor(n), Forward) => {
+                if n == self.normal_steps {
+                    (Split, default_reward)
+                } else {
+                    (Corridor(n + 1), default_reward)
+                }
+            }
+            (Corridor(n), _) => (Corridor(n), default_reward),
+            (Split, Up) => (
+                Terminal,
+                if self.observed == 1 {
+                    trap_reward
+                } else {
+                    nontrap_reward
+                },
+            ),
+            (Split, Down) => (
+                Terminal,
+                if self.observed == -1 {
+                    trap_reward
+                } else {
+                    nontrap_reward
+                },
+            ),
             (Split, Backward) => (
                 if self.observed == 1 {
                     ObserveU
                 } else {
                     ObserveL
                 },
-                0.0,
+                default_reward,
             ),
-            (Split, _) => (Split, 0.0),
-            (Terminal, _) => (Terminal, 0.0), // can't happen
-
-                                              // (Start, _) => (self.observe(), 0.0),
-                                              // (ObserveL, _) => (Split, 0.0),
-                                              // (ObserveU, _) => (Split, 0.0),
-                                              // (Split, Up) => (Terminal, if self.observed == 1 { -1.0 } else { 0.0 }),
-                                              // (Split, Down) => (Terminal, if self.observed == -1 { -1.0 } else { 0.0 }),
-                                              // (Split, _) => (Split, 0.0),
-                                              // (Terminal, _) => (Terminal, 0.0), // can't happen
+            (Split, _) => (Split, default_reward),
+            (Terminal, _) => panic!("action attempted in terminal"),
         };
 
         self.current_state = next_state;
@@ -103,14 +133,19 @@ impl Environment for TCorridor {
         use TCorridorState::*;
 
         match state {
+            // Start => vec![Forward],
+            // ObserveL => vec![Forward, Backward],
+            // ObserveU => vec![Forward, Backward],
+            // Corridor(_) => vec![Forward, Backward],
+            // Split => vec![Up, Down, Backward],
+            // Terminal => vec![Forward],
             Start => vec![Forward],
             ObserveL => vec![Forward],
             ObserveU => vec![Forward],
+            Corridor(_) => vec![Forward],
             Split => vec![Up, Down],
-            Terminal => vec![Forward], // implementational detail
+            Terminal => vec![Forward],
         }
-
-        // vec![Forward, Backward, Up, Down]
     }
 
     fn current_state(&self) -> Self::State {

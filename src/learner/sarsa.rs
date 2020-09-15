@@ -25,12 +25,12 @@ impl<E: Environment> TabularLearner<E> for Sarsa<E> {
             // episode() assumes gamma=1
             gain += reward;
             let next_action = self.epsilon_greedy(self.config.epsilon, next_state, env);
-            if self.config.debug {
-                println!(
-                    "S: {:?}, A: {:?}, R: {}, S': {:?}, A': {:?}",
-                    state, action, reward, next_state, next_action
-                );
-            }
+            // if self.config.debug {
+            //     println!(
+            //         "S: {:?}, A: {:?}, R: {}, S': {:?}, A': {:?}",
+            //         state, action, reward, next_state, next_action
+            //     );
+            // }
             let target =
                 reward + self.config.gamma * self.data.value(&self.config, next_state, next_action);
             self.update(self.config.alpha, state, action, target);

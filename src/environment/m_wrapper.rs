@@ -52,7 +52,7 @@ impl<E: Environment> Environment for MWrapper<E> {
         }
     }
 
-    fn available_actions(&self, (env_state, m_state): Self::State) -> Vec<Self::Action> {
+    fn available_actions(&self, (env_state, _m_state): Self::State) -> Vec<Self::Action> {
         self.env
             .available_actions(env_state)
             .iter()
@@ -66,11 +66,21 @@ impl<E: Environment> Environment for MWrapper<E> {
     }
 
     fn terminated(&self) -> bool {
-        self.env.terminated() && self.m == 2
+        if self.env.terminated() || self.m == 2 {
+            assert!(self.env.terminated() && self.m == 2);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     fn is_terminal(&self, (env_state, m_state): Self::State) -> bool {
-        self.env.is_terminal(env_state) && m_state == 2
+        if self.env.is_terminal(env_state) || m_state == 2 {
+            assert!(self.env.is_terminal(env_state) && m_state == 2);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     fn get_terminal(&self) -> Self::State {

@@ -36,7 +36,7 @@ fn apply_displacement((dx, dy): GridIndex, (w, h): GridIndex, (x, y): GridIndex)
     (x, y)
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum GridWorldAction {
     Left,
     Right,

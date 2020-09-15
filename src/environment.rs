@@ -9,9 +9,9 @@ pub mod t_corridor;
 
 // Reward process interface
 pub trait Environment {
-    type Action: Copy + Hash + Eq + std::fmt::Debug;
+    type Action: Copy + Hash + Eq + std::fmt::Debug + PartialOrd + Ord;
     // either an index or a state representation
-    type State: Copy + Hash + Eq + std::fmt::Debug;
+    type State: Copy + Hash + Eq + std::fmt::Debug + PartialOrd + Ord;
 
     /// Returns None on all transitions from terminal state
     fn take_action(&mut self, action: Self::Action) -> Option<(Self::State, Reward)>;
