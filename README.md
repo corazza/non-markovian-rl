@@ -1,3 +1,5 @@
-# Reinforcement learning
+# Non-Markovian Reinforcement Learning
 
-Some Rust code to go along with the book [*Reinforcement Learning: An Introduction* (PDF)](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) by Richard Sutton and Andrew Barto.
+Solving the problem of non-Markovian reward functions by providing agents access to a finite amount of memory.
+
+Post about this project: https://corazza.github.io/2020/09/15/reinforcement-learning-non-markov-memory.html
